@@ -1,3 +1,8 @@
+import { api } from '@/services/api'
+
+import type {
+  ManualStudySelectionPayload,
+} from './questAPI-lab.types';
 
 import type {
   QuestApiLabResponse,
@@ -60,4 +65,13 @@ export async function getLabTopics(
   })
 
   return request<QuestApiLabResponse>('topics', params)
+}
+
+export async function sendManualStudySelection(
+  payload: ManualStudySelectionPayload,
+): Promise<void> {
+  await api.post(
+    '/quest-api-lab/selection',
+    payload,
+  )
 }

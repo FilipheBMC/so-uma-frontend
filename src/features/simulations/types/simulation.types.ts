@@ -54,7 +54,8 @@ export interface QuestApiQuestion {
 }
 
 export interface QuestApiQuestionGroup {
-  materia: string
+  materia: string,
+  assunto?: string,
   questions: {
     data: {
       total: number
@@ -80,9 +81,83 @@ export interface QuestApiResult {
   questions: QuestApiQuestionGroup[]
 }
 
+export type ResolvedStudyStatus =
+  | 'MATCHED'
+  | 'NO_MATCH'
+  | 'NOT_ANALYZED'
+  | 'ERROR_FALLBACK'
+
+export interface SemanticMatch {
+  originalName: string
+  status: 'MATCHED' | 'NO_MATCH'
+  catalogId: string | null
+  catalogName: string | null
+  confidence: number
+  lexicalScore: number | null
+  reason: string
+}
+
+export interface SemanticTopicMatch extends SemanticMatch {
+  catalogSubjectId: string | null
+  catalogSubjectName: string | null
+}
+
+export interface SemanticMatchingResult {
+  originalSubject: string
+  subjectMatch: SemanticMatch
+  topics: SemanticTopicMatch[]
+}
+
+export interface ResolvedStudyTopic {
+  originalName: string
+  resolvedName: string
+  status: ResolvedStudyStatus
+  catalogId: string | null
+  catalogSubjectId: string | null
+  confidence: number | null
+  reason: string | null
+}
+
+export interface ResolvedStudySubject {
+  originalName: string
+  resolvedName: string
+  amount: number | null
+  status: ResolvedStudyStatus
+  catalogId: string | null
+  confidence: number | null
+  reason: string | null
+  topics: ResolvedStudyTopic[]
+}
+
+export interface StudyPreparationSubject {
+  materia: string
+  topics: string[]
+  amount: number
+}
+
+export interface StudyPreparationResult {
+  totalQuestions: number
+
+  groups: {
+    name: string
+    questionCount: number | null
+  }[]
+
+  subjects: StudyPreparationSubject[]
+
+  resolvedSubjects: ResolvedStudySubject[]
+
+  semanticMatches: SemanticMatchingResult[]
+
+  questions: QuestApiQuestionGroup[]
+
+  notifications: string[]
+}
+
 export interface GenerateQuestionsResponse {
   message: string
-  result: QuestApiResult
+  // result: QuestApiResult
+  result: StudyPreparationResult
 }
 
 // Formato interno do módulo de simulados

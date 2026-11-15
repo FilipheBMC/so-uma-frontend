@@ -12,6 +12,7 @@ import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 import StudyPreparationPage from '@/features/study/pages/StudyPreparationPage'
 import { SimulationPage } from '@/features/simulations/pages/SimulationPage'
 import QuestApiLabPage from '@/features/pages/QuestAPIPage'
+import AnalysisPage from '@/features/analysis-next/analysis.page'
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -73,6 +74,11 @@ export function AppRoutes() {
         <Route
           path="/quest-api-lab"
           element={<QuestApiLabPage />}
+        />
+
+        <Route
+          path="/testando"
+          element={<AnalysisPage/>}
         />
 
       </Route>

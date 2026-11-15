@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Flag } from 'lucide-react'
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Flag,
+  Sparkles,
+} from 'lucide-react'
 
-import { adaptQuestions } from '../adapters/simulation.types' 
+import { adaptQuestions } from '../adapters/simulation.types'
 
 import { QuestionCard } from '../components/QuestionCard'
 import { QuestionNavigation } from '../components/QuestionNavigation'
@@ -14,15 +20,20 @@ import { useSimulation } from '../hooks/useSimulation'
 
 import type {
   GenerateQuestionsResponse,
+  ResolvedStudyStatus,
+  ResolvedStudySubject,
   SimulationConfig,
 } from '../types/simulation.types'
 
 interface SimulationLocationState {
-  result?: GenerateQuestionsResponse['result']
+  result?: GenerateQuestionsResponse['result'] & {
+    resolvedSubjects?: ResolvedStudySubject[]
+  }
 }
 
 interface SimulationPageProps {
   config?: SimulationConfig
+  showSemanticRelations?: boolean
 }
 
 const defaultConfig: SimulationConfig = {
@@ -30,8 +41,162 @@ const defaultConfig: SimulationConfig = {
   durationInMinutes: null,
 }
 
+function getSemanticStatusLabel(status: ResolvedStudyStatus): string {
+  switch (status) {
+    case 'MATCHED':
+      return 'Correspondência encontrada'
+    case 'NO_MATCH':
+      return 'Sem correspondência'
+    case 'NOT_ANALYZED':
+      return 'Não analisado'
+    case 'ERROR_FALLBACK':
+      return 'Nome original utilizado'
+  }
+}
+
+function getSemanticStatusClass(status: ResolvedStudyStatus): string {
+  switch (status) {
+    case 'MATCHED':
+      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+    case 'NO_MATCH':
+      return 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+    case 'NOT_ANALYZED':
+      return 'bg-muted text-muted-foreground'
+    case 'ERROR_FALLBACK':
+      return 'bg-orange-500/10 text-orange-700 dark:text-orange-300'
+  }
+}
+
+interface SemanticRelationRowProps {
+  label: string
+  originalName: string
+  resolvedName: string
+  status: ResolvedStudyStatus
+  confidence: number | null
+  reason: string | null
+}
+
+function SemanticRelationRow({
+  label,
+  originalName,
+  resolvedName,
+  status,
+  confidence,
+  reason,
+}: SemanticRelationRowProps) {
+  return (
+    <div className="space-y-2 rounded-lg border bg-background/50 p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span>{originalName}</span>
+
+        {originalName !== resolvedName ? (
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Nome preservado
+          </span>
+        )}
+
+        <strong>{resolvedName}</strong>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-medium ${getSemanticStatusClass(status)}`}
+        >
+          {getSemanticStatusLabel(status)}
+        </span>
+
+        {confidence !== null && status === 'MATCHED' && (
+          <span className="text-xs text-muted-foreground">
+            Confiança: {Math.round(confidence * 100)}%
+          </span>
+        )}
+      </div>
+
+      {reason && (
+        <p className="text-xs leading-5 text-muted-foreground">
+          {reason}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function SemanticRelationsPanel({
+  subjects,
+}: {
+  subjects: ResolvedStudySubject[]
+}) {
+  if (subjects.length === 0) {
+    return null
+  }
+
+  return (
+    <details className="rounded-xl border p-4 md:p-5">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+
+          <div>
+            <h2 className="font-semibold">Correspondências semânticas</h2>
+            <p className="text-xs text-muted-foreground">
+              Consulte como as matérias e os assuntos foram relacionados ao catálogo.
+            </p>
+          </div>
+        </div>
+
+        <span className="rounded-full bg-muted px-3 py-1 text-xs">
+          {subjects.length} matéria(s)
+        </span>
+      </summary>
+
+      <div className="mt-4 space-y-3">
+        {subjects.map((subject, index) => (
+          <article
+            key={`${subject.originalName}-${index}`}
+            className="space-y-3 rounded-lg border p-3"
+          >
+            <SemanticRelationRow
+              label="Matéria"
+              originalName={subject.originalName}
+              resolvedName={subject.resolvedName}
+              status={subject.status}
+              confidence={subject.confidence}
+              reason={subject.reason}
+            />
+
+            {subject.topics.length > 0 && (
+              <div className="space-y-2 border-t pt-3">
+                <h3 className="text-sm font-medium">Assuntos</h3>
+
+                {subject.topics.map((topic, topicIndex) => (
+                  <SemanticRelationRow
+                    key={`${topic.originalName}-${topicIndex}`}
+                    label="Assunto"
+                    originalName={topic.originalName}
+                    resolvedName={topic.resolvedName}
+                    status={topic.status}
+                    confidence={topic.confidence}
+                    reason={topic.reason}
+                  />
+                ))}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+    </details>
+  )
+}
+
 export function SimulationPage({
   config = defaultConfig,
+  showSemanticRelations = true,
 }: SimulationPageProps) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -157,6 +322,12 @@ export function SimulationPage({
   if (simulation.isFinished && simulation.result) {
     return (
       <main className="mx-auto max-w-5xl space-y-8 p-4 md:p-8">
+        {showSemanticRelations && (
+          <SemanticRelationsPanel
+            subjects={apiResult.resolvedSubjects ?? []}
+          />
+        )}
+
         <SimulationsSummary
           result={simulation.result}
           questions={questions}
@@ -247,6 +418,12 @@ export function SimulationPage({
           {simulation.answeredQuestions} de {questions.length} respondidas
         </span>
       </header>
+
+      {showSemanticRelations && (
+        <SemanticRelationsPanel
+          subjects={apiResult.resolvedSubjects ?? []}
+        />
+      )}
 
       <SimulationTimer
         remainingTimeInSeconds={simulation.remainingTimeInSeconds}

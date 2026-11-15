@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   getLabSubjects,
   getLabTopics,
-} from './QuestAPI-lab.service';
+  sendManualStudySelection,
+} from './QuestAPI-lab.service'
 
 const ITEMS_PER_PAGE = 20
 
@@ -16,9 +17,6 @@ export default function QuestApiLabPage() {
   const [subjectsLoading, setSubjectsLoading] = useState(false)
   const [subjectsError, setSubjectsError] = useState('')
 
-  // Matéria escolhida
-  const [selectedSubject, setSelectedSubject] = useState('')
-
   // Assuntos
   const [topics, setTopics] = useState<string[]>([])
   const [topicsPage, setTopicsPage] = useState(1)
@@ -26,8 +24,14 @@ export default function QuestApiLabPage() {
   const [topicsLoading, setTopicsLoading] = useState(false)
   const [topicsError, setTopicsError] = useState('')
 
-  // Seleção de assuntos
+  // Seleção do usuário
+  const [selectedSubject, setSelectedSubject] = useState('')
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+
+  // Envio ao backend
+  const [sendingSelection, setSendingSelection] = useState(false)
+  const [sendMessage, setSendMessage] = useState('')
+  const [sendError, setSendError] = useState('')
 
   // Consulta as matérias
   const loadSubjects = useCallback(
@@ -69,7 +73,7 @@ export default function QuestApiLabPage() {
     void loadSubjects(1, false)
   }, [loadSubjects])
 
-  // Consulta os assuntos da matéria escolhida
+  // Consulta os assuntos de uma matéria
   const loadTopics = useCallback(
     async (materia: string, page: number, append: boolean) => {
       setTopicsLoading(true)
@@ -116,6 +120,10 @@ export default function QuestApiLabPage() {
     setTopicsHasMore(false)
     setTopicsError('')
 
+    // Limpa mensagens do envio anterior
+    setSendMessage('')
+    setSendError('')
+
     if (materia) {
       void loadTopics(materia, 1, false)
     }
@@ -131,6 +139,47 @@ export default function QuestApiLabPage() {
         ? [...previous, topic]
         : previous.filter((item) => item !== topic),
     )
+
+    setSendMessage('')
+    setSendError('')
+  }
+
+  // Envia a matéria e os assuntos selecionados ao backend
+  async function handleSendSelection() {
+    if (!selectedSubject || selectedTopics.length === 0) {
+      setSendError(
+        'Selecione uma matéria e pelo menos um assunto.',
+      )
+      return
+    }
+
+    setSendingSelection(true)
+    setSendMessage('')
+    setSendError('')
+
+    try {
+      await sendManualStudySelection({
+        source: 'manual',
+        subjects: [
+          {
+            name: selectedSubject,
+            topics: selectedTopics,
+          },
+        ],
+      })
+
+      setSendMessage('Seleção enviada com sucesso!')
+    } catch (error) {
+      console.error('Erro ao enviar seleção:', error)
+
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível enviar a seleção.',
+      )
+    } finally {
+      setSendingSelection(false)
+    }
   }
 
   return (
@@ -218,11 +267,13 @@ export default function QuestApiLabPage() {
           </button>
         )}
 
-        {!subjectsLoading && subjects.length === 0 && !subjectsError && (
-          <p className="mt-4 text-sm text-muted-foreground">
-            Nenhuma matéria encontrada.
-          </p>
-        )}
+        {!subjectsLoading &&
+          subjects.length === 0 &&
+          !subjectsError && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Nenhuma matéria encontrada.
+            </p>
+          )}
       </section>
 
       {/* CONSULTA DE ASSUNTOS */}
@@ -316,6 +367,7 @@ export default function QuestApiLabPage() {
             </button>
           )}
 
+          {/* RESUMO DA SELEÇÃO */}
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
             <span className="text-sm text-muted-foreground">
               {selectedTopics.length} assunto(s) selecionado(s)
@@ -323,7 +375,11 @@ export default function QuestApiLabPage() {
 
             <button
               type="button"
-              onClick={() => setSelectedTopics([])}
+              onClick={() => {
+                setSelectedTopics([])
+                setSendMessage('')
+                setSendError('')
+              }}
               disabled={selectedTopics.length === 0}
               className="text-sm font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -344,6 +400,36 @@ export default function QuestApiLabPage() {
               </ul>
             </div>
           )}
+
+          {/* ENVIO AO BACKEND */}
+          <div className="mt-5 space-y-3 border-t pt-5">
+            {sendError && (
+              <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+                {sendError}
+              </p>
+            )}
+
+            {sendMessage && (
+              <p className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+                {sendMessage}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSendSelection}
+              disabled={
+                sendingSelection ||
+                !selectedSubject ||
+                selectedTopics.length === 0
+              }
+              className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {sendingSelection
+                ? 'Enviando seleção...'
+                : 'Enviar assuntos ao backend'}
+            </button>
+          </div>
         </section>
       )}
     </main>

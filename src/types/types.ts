@@ -1,0 +1,31 @@
+export interface QuestApiLabResponse {
+  items: string[]
+  page: number
+  perPage: number
+  hasMore: boolean
+  total?: number
+}
+
+export interface QuestApiLabPaginationParams {
+  page: number
+  per_page: number
+}
+
+export interface QuestApiLabTopicsParams
+  extends QuestApiLabPaginationParams {
+  materia: string
+}
+
+export interface ManualStudySubject {
+  name: string
+  topics: string[]
+}
+
+export interface ManualStudySelectionPayload {
+  source: 'manual'
+  subjects: ManualStudySubject[]
+}
+
+export interface ManualStudySelectionResponse {
+  message: string
+}

@@ -15,3 +15,17 @@ export interface QuestApiLabTopicsParams
   extends QuestApiLabPaginationParams {
   materia: string
 }
+
+export interface ManualStudySubject {
+  name: string
+  topics: string[]
+}
+
+export interface ManualStudySelectionPayload {
+  source: 'manual'
+  subjects: ManualStudySubject[]
+}
+
+export interface ManualStudySelectionResponse {
+  message: string
+}
