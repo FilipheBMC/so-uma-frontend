@@ -55,9 +55,14 @@ export function AppRoutes() {
           element={<PlaceholderPage title="Simulados" />}
         />
 
-        <Route
+        {/* <Route
           path="/study"
           element={<StudyPreparationPage />}
+        /> */}
+
+        <Route
+          path="/study"
+          element={<AnalysisPage/>}
         />
 
         <Route

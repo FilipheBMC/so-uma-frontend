@@ -10,32 +10,35 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-const stats = [
-  {
-    title: 'Questões resolvidas',
-    value: '248',
-    description: '+12% em relação à semana passada',
-    icon: BookOpen,
-  },
-  {
-    title: 'Taxa de acertos',
-    value: '82%',
-    description: '+5% em relação à semana passada',
-    icon: Target,
-  },
-  {
-    title: 'Dias consecutivos',
-    value: '7 dias',
-    description: 'Continue mantendo o ritmo!',
-    icon: Flame,
-  },
-  {
-    title: 'Tempo de estudo',
-    value: '18h 30m',
-    description: 'Nesta semana',
-    icon: Clock3,
-  },
-]
+
+import { DashboardStatistics } from '../components/DashboardStatistics'
+
+// const stats = [
+//   {
+//     title: 'Questões resolvidas',
+//     value: '248',
+//     description: '+12% em relação à semana passada',
+//     icon: BookOpen,
+//   },
+//   {
+//     title: 'Taxa de acertos',
+//     value: '82%',
+//     description: '+5% em relação à semana passada',
+//     icon: Target,
+//   },
+//   {
+//     title: 'Dias consecutivos',
+//     value: '7 dias',
+//     description: 'Continue mantendo o ritmo!',
+//     icon: Flame,
+//   },
+//   {
+//     title: 'Tempo de estudo',
+//     value: '18h 30m',
+//     description: 'Nesta semana',
+//     icon: Clock3,
+//   },
+// ]
 
 const weeklyActivity = [
   { day: 'Seg', value: 45 },
@@ -81,7 +84,7 @@ export function DashboardPage() {
       </section>
 
       {/* Indicadores */}
-      <section>
+      {/* <section>
         <div className="mb-4">
           <h3 className="text-base font-semibold text-white">
             Seu desempenho
@@ -121,10 +124,11 @@ export function DashboardPage() {
             )
           })}
         </div>
-      </section>
+      </section> */}
+      <DashboardStatistics />
 
       {/* Gráficos e progresso */}
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      {/* <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
 
         <div className="rounded-xl border border-slate-800 bg-[#111827] p-5 xl:col-span-2">
           <div className="flex items-center justify-between">
@@ -192,7 +196,7 @@ export function DashboardPage() {
             <div className="h-full w-3/4 rounded-full bg-blue-500" />
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Ações rápidas */}
       <section>

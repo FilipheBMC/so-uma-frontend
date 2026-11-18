@@ -1,6 +1,6 @@
 // import type {
 //   QuestApiQuestion,
-//   QuestApiResult,
+//   StudyPreparationResult,
 //   SimulationQuestion,
 // } from '../types/simulation.types'
 
@@ -37,7 +37,7 @@
 // }
 
 // export function adaptQuestions(
-//   result: QuestApiResult,
+//   result: Pick<StudyPreparationResult, 'questions'>,
 // ): SimulationQuestion[] {
 //   return result.questions.flatMap((group) => {
 //     const items = group.questions.data.items
@@ -49,16 +49,17 @@
 // }
 
 import type {
-  QuestApiQuestion,
-  StudyPreparationResult,
+  QuestApiResult,
   SimulationQuestion,
 } from '../types/simulation.types'
 
 function adaptQuestion(
-  question: QuestApiQuestion,
+  question: QuestApiResult['questions'][number]['questions']['data']['items'][number],
   subject: string,
 ): SimulationQuestion {
   return {
+    // Mantemos o ID externo da Quest API na interface. O backend o resolve
+    // para o UUID interno de questions antes de gravar answers.
     id: question.id,
     number: question.numero,
     statementHtml: question.enunciado,
@@ -78,22 +79,20 @@ function adaptQuestion(
     topic: question.classificacao?.assunto ?? 'Não informado',
 
     difficulty: question.dificuldade,
-
     exam: question.provas[0] ?? null,
-
-    isCanceled:
-      question.anulada || question.sinalizadores.anulada,
+    isCanceled: question.anulada || question.sinalizadores.anulada,
   }
 }
 
+// A preparação devolvida pelo backend contém vários metadados além de
+// questions. O adaptador depende apenas desse campo, sem exigir que o objeto
+// também tenha source/groups/subjects com o formato do QuestApiResult original.
 export function adaptQuestions(
-  result: Pick<StudyPreparationResult, 'questions'>,
+  result: Pick<QuestApiResult, 'questions'>,
 ): SimulationQuestion[] {
   return result.questions.flatMap((group) => {
     const items = group.questions.data.items
 
-    return items.map((question) =>
-      adaptQuestion(question, group.materia),
-    )
+    return items.map((question) => adaptQuestion(question, group.materia))
   })
 }

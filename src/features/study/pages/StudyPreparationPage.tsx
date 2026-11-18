@@ -162,10 +162,16 @@ export default function StudyPreparationPage() {
         },
       ],
 
+      // subjects: manualSubjects.map((subject) => ({
+      //   name: subject.name.trim(),
+      //   group: 'Geral',
+      //   questionCount: subject.questionCount,
+      // })),
       subjects: manualSubjects.map((subject) => ({
         name: subject.name.trim(),
         group: 'Geral',
         questionCount: subject.questionCount,
+        topics: [],
       })),
     }
 
@@ -211,7 +217,7 @@ export default function StudyPreparationPage() {
 
 
       // Ver isso aqui depois
-      
+
       // if (!response.result?.questions.length) {
       //   setError('A API não retornou questões para este simulado.')
       //   return
@@ -269,11 +275,10 @@ export default function StudyPreparationPage() {
           <button
             type="button"
             onClick={() => changeMode('pdf')}
-            className={`rounded-2xl border p-5 text-left transition ${
-              mode === 'pdf'
+            className={`rounded-2xl border p-5 text-left transition ${mode === 'pdf'
                 ? 'border-blue-500 bg-blue-500/10'
                 : 'border-white/10 bg-[#111827] hover:border-gray-600'
-            }`}
+              }`}
           >
             <FileText size={28} className="mb-4 text-blue-400" />
 
@@ -289,11 +294,10 @@ export default function StudyPreparationPage() {
           <button
             type="button"
             onClick={() => changeMode('manual')}
-            className={`rounded-2xl border p-5 text-left transition ${
-              mode === 'manual'
+            className={`rounded-2xl border p-5 text-left transition ${mode === 'manual'
                 ? 'border-purple-500 bg-purple-500/10'
                 : 'border-white/10 bg-[#111827] hover:border-gray-600'
-            }`}
+              }`}
           >
             <BookOpen size={28} className="mb-4 text-purple-400" />
 
